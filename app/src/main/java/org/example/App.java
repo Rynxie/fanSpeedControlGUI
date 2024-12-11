@@ -9,8 +9,10 @@ import org.eclipse.paho.client.mqttv3.*;
 public class App {
 
     public static JLabel therm = new JLabel("Sıcaklık Buraya gelecek");
+   
+    public static chart thermChart = new chart();
     public static void main(String[] args) throws MqttException {
-        
+   
 
         MqttClient client = new MqttClient("tcp://tuna.sh:1884","JavaApp");
         client.connect();
@@ -30,12 +32,11 @@ public class App {
         frame.add(topPanel);
 
         JPanel midPanel = new JPanel();
+        midPanel.setLayout(new BorderLayout());
+ //       therm.setFont(new Font("Arial", Font.BOLD, 48));
 
-        
-        therm.setFont(new Font("Arial", Font.BOLD, 48));
-
-        midPanel.add(therm);
-        
+   //     midPanel.add(therm);
+        midPanel.add(thermChart.chartPanel, BorderLayout.CENTER);
         frame.add(midPanel);
         
         

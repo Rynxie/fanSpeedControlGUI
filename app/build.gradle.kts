@@ -21,8 +21,9 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     
-// https://mvnrepository.com/artifact/org.eclipse.paho/org.eclipse.paho.client.mqttv3
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
+
+    implementation("org.jfree:jfreechart:1.5.5")
 
 
     // This dependency is used by the application.
