@@ -14,9 +14,9 @@ public class chart {
 
         // Çizgi grafiği oluştur
     JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                "Gerçek Zamanlı Grafik", // Başlık
+                "Sıcaklık", // Başlık
                 "Zaman",                // X ekseni etiketi
-                "Değer",                // Y ekseni etiketi
+                "Sıcaklık",                // Y ekseni etiketi
                 dataset,                // Veri seti
                 false,                  // Legend
                 true,                   // Tooltips
@@ -28,7 +28,17 @@ public class chart {
     public void updateData(int value) {
         series.addOrUpdate(new Second(), value);
     }
+    
+    public chart(){
 
+        try {
+            // FlatDarkLaf kurulum
+            com.formdev.flatlaf.FlatDarkLaf.setup();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
 
 }

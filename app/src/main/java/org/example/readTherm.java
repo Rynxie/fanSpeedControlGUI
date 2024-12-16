@@ -30,7 +30,7 @@ public class readTherm extends Thread  {
                     public void messageArrived(String topic, MqttMessage message) throws Exception {
                         
 
- //                       org.example.App.therm.setText(new String(message.getPayload()) + "C°");
+                        org.example.App.therm.setText(new String(message.getPayload()) + "C°");
                         String payload = new String(message.getPayload(), Charset.forName("UTF-8"));
                         int value = Integer.parseInt(payload);
                         org.example.App.thermChart.updateData(value);
