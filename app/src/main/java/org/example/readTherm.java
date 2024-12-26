@@ -3,6 +3,8 @@ package org.example;
 import org.eclipse.paho.client.mqttv3.*;
 import java.nio.charset.Charset;
 
+import java.awt.Color;
+
 
 public class readTherm extends Thread  {
 
@@ -31,9 +33,21 @@ public class readTherm extends Thread  {
                         
 
                         org.example.App.therm.setText(new String(message.getPayload()) + "C°"); // sıcaklık buraya gel yazısını eğer sunucudan veri gelirse değiştiriyor 
+                            
                         String payload = new String(message.getPayload(), Charset.forName("UTF-8")); // sunucudan gelen mesajı stringe çeviriyor
                         int value = Integer.parseInt(payload); // stringi integera çeviriyor 
                         org.example.App.thermChart.updateData(value); // grafiğin değerlerini güncelliyor  
+                        String colorCode = new String(); 
+                        if(value < 20){
+                           colorCode = "#25fccb";
+                        }else if(value < 25){
+                            colorCode = "#ffcd76";
+                        }else{
+                            colorCode = "#ff7676";
+                        }
+
+                        org.example.App.therm.setForeground(Color.decode(colorCode));
+
                     }
     
                     @Override

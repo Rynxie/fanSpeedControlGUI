@@ -9,8 +9,7 @@ import org.eclipse.paho.client.mqttv3.*;
 
 public class App {
 
-   
-    public static JLabel therm = new JLabel("Sıcaklık Buraya gelecek"); // espyi takmadan önceki yazı 
+    public static JLabel therm = new JLabel("Baglanti YOK!");// espyi takmadan önceki yazı 
     public static chart thermChart = new chart(); // grafik 
 
     public static void main(String[] args) throws MqttException {
@@ -34,18 +33,30 @@ public class App {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // pencere kapatıldığında programı tamamen kapat, bu koyulmazsa arka planda program çalışmaya devam ediyor
         frame.setSize(500, 600); // pencerenin boyutu
-        frame.setLayout(new GridLayout(3, 1));
-        // frame.setUndecorated(true); // windowsun açma kapama tuuşları vs görünmesin diye 
+        frame.setLayout(new GridBagLayout());
 
-        // ızgara hücrelerine eklenecek panellerin ayarları her biri için aytı fonksiyon tanımalndı
-        JPanel topPanel = createTopPanel(client); // top panelin nereye içindilerin nereye geleceğini ayarlayan fonksiyon createTopPanel, client mqtt 
-        JPanel midPanel = createMidPanel(); // grafiği alıp midPanel'in içine koyuyor 
-        JPanel bottomPanel = createBottomPanel(client); // 
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
 
-        // paneller pencereye ekleniyor
-        frame.add(topPanel);
-        frame.add(midPanel);
-        frame.add(bottomPanel);
+        // ızgara hücrelerine eklenecek panellerin ayarları her biri için ayrı fonksiyon tanımlandı
+        JPanel topPanel = createTopPanel(client);
+        JPanel midPanel = createMidPanel();
+        JPanel bottomPanel = createBottomPanel(client);
+
+        // panelleri pencereye ekliyoruz
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weighty = 0.1;
+        frame.add(topPanel, gbc);
+
+        gbc.gridy = 1;
+        gbc.weighty = 0.7;
+        frame.add(midPanel, gbc);
+
+        gbc.gridy = 2;
+        gbc.weighty = 0.2;
+        frame.add(bottomPanel, gbc);
 
         frame.setVisible(true); // pencereyi görünür yapıyor
 
@@ -87,7 +98,7 @@ public class App {
             }
         });
 
-        // oluşturulan yazı,slider,butonub panele eklenmesi yani LEFT SIDE 
+        // oluşturulan yazı,slider,butonu panele eklenmesi yani LEFT SIDE 
         topLeftPanel.add(Box.createRigidArea(new Dimension(0, 50))); // Box.createRigidArea yukarda 50 piksel boşluk ekliyor
         topLeftPanel.add(speedLabel); // maks hız yazısını ekliyor
         topLeftPanel.add(Box.createRigidArea(new Dimension(0, 20))); //
@@ -99,6 +110,7 @@ public class App {
         JPanel topRightPanel = new JPanel(new GridLayout(1, 1)); // bir satır bir sütun içinde olsun 
         therm.setFont(new Font("Arial", Font.BOLD, 24)); 
         therm.setHorizontalAlignment(SwingConstants.CENTER); // yazıyı ortalama 
+        therm.setForeground(Color.WHITE);
         topRightPanel.add(therm); // yazıyı panele ekleme 
         
         // birinci satırın sağ ve sol panelinin eklenmesi 
