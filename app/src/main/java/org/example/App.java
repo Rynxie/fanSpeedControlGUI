@@ -20,7 +20,7 @@ public class App {
         FlatAnimatedLafChange.showSnapshot(); // butonların renklerini vs değiştiriyor, sliderin şeklini değiştiriyor
 
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf()); // kütüphanenin light temasını ekliyor
+            UIManager.setLookAndFeel(new FlatDarkLaf());
         } catch (Exception e) {
             System.err.println("Cannot load the theme: " + e.getMessage()); // eğer eklenemezse hata veriyor 
         }
