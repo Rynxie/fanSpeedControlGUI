@@ -11,6 +11,10 @@ public class App {
 
     public static JLabel therm = new JLabel("Baglanti YOK!");// espyi takmadan önceki yazı 
     public static chart thermChart = new chart(); // grafik 
+    public static JButton acButton;
+    public static JButton kapatButton;
+    public static JSlider slider;
+    public static JCheckBox autoModCheckBox;
 
     public static void main(String[] args) throws MqttException {
 
@@ -59,67 +63,109 @@ public class App {
         frame.add(bottomPanel, gbc);
 
         frame.setVisible(true); // pencereyi görünür yapıyor
-
+        sendMqttPackage(client, "esp/statusCheck", 0);
         // mqtt "esp/therm" kanalından sıcaklık okuması alınıp grafiğe ve anlık sıcaklık göstergesine yükleyen fonksiyon
         readTherm thread = new readTherm(); // thread'in açılma sebebi aynı anda mqtt üzerinden gelen sıcaklık verisinin okunması gerek hem de pencereyi açıyor iki işi aynı anda yapması için thread kullanılıyor 
         thread.start();
     }
-
+    public static void sendMqttPackage(MqttClient client, String topic, int data){
+        
+        String payload = "" + data;
+        MqttMessage message = new MqttMessage(payload.getBytes());
+        message.setQos(1);
+        try { 
+            client.publish(topic, message);
+        } catch (MqttException error) { 
+            System.out.println("Sinyal gönderilemedi");
+        } finally {
+            System.out.println("Sinyal gönderildi --> " + payload);
+        }
+        return;
+    }
     private static JPanel createTopPanel(MqttClient client) {
-        JPanel topPanel = new JPanel(new GridLayout(1, 2)); // topPanel'i iki tane sütuna bölme 
-        
-        // Sol kısım fan hızı ayarlama
+        JPanel topPanel = new JPanel(new GridLayout(1, 2)); 
+    
         JPanel topLeftPanel = new JPanel();
-        topLeftPanel.setLayout(new BoxLayout(topLeftPanel, BoxLayout.Y_AXIS)); // topPanel'deki birinci sütun 
-
-        JSlider slider = new JSlider(0, 255, 127); // topPanel'deki birinci sütunun ayarları 
-        JLabel speedLabel = new JLabel("Max Hız");
-        JButton setSpeedButton = new JButton("Onayla");
-
-        speedLabel.setFont(new Font("Arial", Font.BOLD, 24)); 
-        speedLabel.setHorizontalAlignment(SwingConstants.CENTER); // yatayda ortalıyor, yazının nereye yaslı olduğu 
-        speedLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // x düzleminde ortalıyor,
-
-        slider.setAlignmentX(Component.CENTER_ALIGNMENT); // slider'ın x e göre ortalanmasını sağlıyor
-
-        setSpeedButton.setAlignmentX(Component.CENTER_ALIGNMENT); // buton'un x e göre ortalanmasını sağlıyor
-        setSpeedButton.addActionListener(e -> { // butona tıklandığında yapılacak şeyler 
-            System.out.println("Fan hızı ayarlandı"); 
-            int pwmDuty = slider.getValue(); // slider'dan 0 ile 250 arasında değer geliyor bu değer mqtt ile yollanıyor
-            String payload = "" + pwmDuty; // interger'ı string yapmak için mqtt ile sadece string yollabildiği için sunucudan ne değer geldiğine bakılabiliyor  
-            MqttMessage message = new MqttMessage(payload.getBytes()); // string'i byte'a çeviriyor mesaj objesi oluşturuyor, payload stringe çevirdiğimiz hali
-            message.setQos(1); // bunun bilinmesi lazım 
-            try { // mesaj gönderilmezse bilinmesi için try catch yapısı kullanıldı
-                client.publish("esp/speed", message); // mesajı gönderen fonksiyon
-            } catch (MqttException error) { 
-                System.out.println("Sinyal gönderilemedi");
-            } finally { // hata vermezse 
-                System.out.println("Sinyal gönderildi");
-            }
-        });
-
-        // oluşturulan yazı,slider,butonu panele eklenmesi yani LEFT SIDE 
-        topLeftPanel.add(Box.createRigidArea(new Dimension(0, 50))); // Box.createRigidArea yukarda 50 piksel boşluk ekliyor
-        topLeftPanel.add(speedLabel); // maks hız yazısını ekliyor
-        topLeftPanel.add(Box.createRigidArea(new Dimension(0, 20))); //
-        topLeftPanel.add(slider); // slider'ı ekliyor
-        topLeftPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        topLeftPanel.add(setSpeedButton); // onayla butonunu ekliyor
-
-        // Sağ kısım sıcaklık yazısının görünmesi 
-        JPanel topRightPanel = new JPanel(new GridLayout(1, 1)); // bir satır bir sütun içinde olsun 
-        therm.setFont(new Font("Arial", Font.BOLD, 24)); 
-        therm.setHorizontalAlignment(SwingConstants.CENTER); // yazıyı ortalama 
-        therm.setForeground(Color.WHITE);
-        topRightPanel.add(therm); // yazıyı panele ekleme 
+        topLeftPanel.setLayout(new GridBagLayout()); 
+    
+        GridBagConstraints gbcTop = new GridBagConstraints();
+        gbcTop.fill = GridBagConstraints.BOTH;
         
-        // birinci satırın sağ ve sol panelinin eklenmesi 
+    
+        slider = new JSlider(0, 255, 127);
+        JLabel speedLabel = new JLabel("Hız");
+        JLabel autoModLabel = new JLabel("Otomatik mod");
+        autoModCheckBox = new JCheckBox();
+
+        
+    
+        speedLabel.setFont(new Font("Arial", Font.BOLD, 16)); 
+        autoModLabel.setFont(new Font("Arial", Font.BOLD, 16)); 
+    
+        slider.addChangeListener(e -> { 
+            System.out.println("Fan hızı ayarlandı"); 
+            int pwmDuty = slider.getValue();
+            sendMqttPackage(client,"esp/speed",pwmDuty);
+        });
+        
+        autoModCheckBox.setHorizontalAlignment(SwingConstants.RIGHT);
+        autoModCheckBox.addActionListener(e -> {
+            System.out.println("Auto mod değişti"); 
+            boolean statusBool = autoModCheckBox.isSelected();
+            int status =  statusBool ? 1 : 0;
+
+            
+            acButton.setEnabled(!statusBool);
+            kapatButton.setEnabled(!statusBool);
+            slider.setEnabled(!statusBool);
+            
+
+            sendMqttPackage(client,"esp/auto",status);
+        });
+    
+        JButton timeFrameSummoner = new JButton("Zaman ayarları");
+    
+        gbcTop.weighty = 0.4;
+        gbcTop.weightx = 0.1;
+        gbcTop.gridx = 0;
+        gbcTop.gridy = 0;
+        topLeftPanel.add(speedLabel, gbcTop);
+    
+        gbcTop.weightx = 2;
+        gbcTop.gridx = 1;
+        gbcTop.gridy = 0;
+        topLeftPanel.add(slider, gbcTop);
+    
+        gbcTop.weightx = 0.2;
+        gbcTop.gridx = 0;
+        gbcTop.gridy = 1;
+        topLeftPanel.add(autoModLabel, gbcTop);
+    
+        gbcTop.weightx = 0.2;
+        gbcTop.gridx = 1;
+        gbcTop.gridy = 1;
+        topLeftPanel.add(autoModCheckBox, gbcTop);
+    
+        gbcTop.weightx = 1.0;
+        gbcTop.weighty = 0.2;
+        gbcTop.gridx = 0;
+        gbcTop.gridy = 2;
+        gbcTop.gridwidth = 2;
+        topLeftPanel.add(timeFrameSummoner, gbcTop);
+    
+        JPanel topRightPanel = new JPanel(new GridLayout(1, 1)); 
+      
+        therm.setFont(new Font("Arial", Font.BOLD, 24)); 
+        therm.setHorizontalAlignment(SwingConstants.CENTER); 
+        therm.setForeground(Color.WHITE);
+        topRightPanel.add(therm); 
+    
         topPanel.add(topLeftPanel); 
         topPanel.add(topRightPanel);
         
-        return topPanel; // oluşturulan top panel döndürülür
+        return topPanel;
     }
-
+    
     private static JPanel createMidPanel() { // midPaneli oluşturan fonksiyon 
         JPanel midPanel = new JPanel(new BorderLayout()); // midpanelin objesi oluşturulur 
         midPanel.add(thermChart.chartPanel, BorderLayout.CENTER); // grafiği orta panele ekleyip ortalıyor 
@@ -130,8 +176,8 @@ public class App {
         JPanel bottomPanel = new JPanel(new GridLayout(1, 2)); // bottomPanel'e 1 satır, 2 sütun ekliyor 
         
         // esp'nin kodu mqtt'nin esp/signal kanalından gelen 1 ve 0 a göre fan açıp kapatılıyor
-        JButton acButton = createButton("Fanı aç", "#42aa86", "1", client); 
-        JButton kapatButton = createButton("Fanı kapat", "#fc4f25", "0", client);
+        acButton = createButton("Fanı aç", "#42aa86", 1, client); 
+        kapatButton = createButton("Fanı kapat", "#fc4f25", 0, client);
         
         // aç kapat butonlarını bottomPanele ekliyor 
         bottomPanel.add(acButton); 
@@ -140,7 +186,7 @@ public class App {
         return bottomPanel; 
     }
 
-    private static JButton createButton(String text, String color, String signal, MqttClient client) { 
+    private static JButton createButton(String text, String color, int signal, MqttClient client) { 
         JButton button = new JButton(text); // textin yazılacağı buton objesi oluşturuluyor 
         button.setBackground(Color.decode(color)); // butonun arka plan rengi 
         button.setForeground(Color.WHITE); // butonun üstündeki yazının rengi
@@ -149,16 +195,8 @@ public class App {
         button.setUI(new javax.swing.plaf.basic.BasicButtonUI()); // oluşturulan butonun temadan etkilenmemesi için 
 
         button.addActionListener(e -> { // butona tıklandığında yapılacak şeyler
-            System.out.println(text + " sinyali gönderiliyor..."); // "fan aç/kapat sinyali gönderiliyor..."
-            MqttMessage message = new MqttMessage(signal.getBytes()); // 1 ve 0'ı byte'a çeviriyor
-            message.setQos(1);
-            try {
-                client.publish("esp/signal", message); // mesajı gönderen fonksiyon 
-            } catch (MqttException error) {
-                System.out.println("Sinyal gönderilemedi");
-            } finally { // hata vermezse bunu çalıştırıyor
-                System.out.println("Sinyal gönderildi"); 
-            }
+            
+            sendMqttPackage(client,"esp/signal",signal);
         });
 
         return button; // oluşturulan buton döndürülür
