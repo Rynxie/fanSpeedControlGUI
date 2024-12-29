@@ -1,4 +1,4 @@
-package org.example;
+package org.fanControl;
 
 import org.eclipse.paho.client.mqttv3.*;
 import java.nio.charset.Charset;
@@ -33,11 +33,11 @@ public class readTherm extends Thread  {
                         
 
                         if(topic.equals("esp/therm")){
-                            org.example.App.therm.setText(new String(message.getPayload()) + "C°"); // sıcaklık buraya gel yazısını eğer sunucudan veri gelirse değiştiriyor 
+                            org.fanControl.App.therm.setText(new String(message.getPayload()) + "C°"); // sıcaklık buraya gel yazısını eğer sunucudan veri gelirse değiştiriyor 
                             
                             String payload = new String(message.getPayload(), Charset.forName("UTF-8")); // sunucudan gelen mesajı stringe çeviriyor
                             int value = Integer.parseInt(payload); // stringi integera çeviriyor 
-                            org.example.App.thermChart.updateData(value); // grafiğin değerlerini güncelliyor  
+                            org.fanControl.App.thermChart.updateData(value); // grafiğin değerlerini güncelliyor  
                             String colorCode = new String(); 
                             if(value < 20){
                             colorCode = "#25fccb";
@@ -47,26 +47,26 @@ public class readTherm extends Thread  {
                                 colorCode = "#ff7676";
                             }
 
-                            org.example.App.therm.setForeground(Color.decode(colorCode));
-                            org.example.App.sendMqttPackage(client, "esp/statusCheck", 0);
+                            org.fanControl.App.therm.setForeground(Color.decode(colorCode));
+                            org.fanControl.App.sendMqttPackage(client, "esp/statusCheck", 0);
                             
                         }
                         if(topic.equals("esp/statusInfo")){
                             String payload = new String(message.getPayload(), Charset.forName("UTF-8"));
                             String[] data = payload.split(";");
-                            System.out.println(data);
+                            
                             if(Integer.parseInt(data[2]) == 1){
-                                org.example.App.acButton.setEnabled(false);
-                                org.example.App.kapatButton.setEnabled(false);
-                                org.example.App.slider.setEnabled(false);
+                                org.fanControl.App.acButton.setEnabled(false);
+                                org.fanControl.App.kapatButton.setEnabled(false);
+                                org.fanControl.App.slider.setEnabled(false);
 
-                                org.example.App.autoModCheckBox.setSelected(true);
+                                org.fanControl.App.autoModCheckBox.setSelected(true);
                             }else{
-                                org.example.App.acButton.setEnabled(true);
-                                org.example.App.kapatButton.setEnabled(true);
-                                org.example.App.slider.setEnabled(true);
+                                org.fanControl.App.acButton.setEnabled(true);
+                                org.fanControl.App.kapatButton.setEnabled(true);
+                                org.fanControl.App.slider.setEnabled(true);
                                 
-                                org.example.App.autoModCheckBox.setSelected(false);
+                                org.fanControl.App.autoModCheckBox.setSelected(false);
                             }
                         }
 

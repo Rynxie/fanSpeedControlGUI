@@ -1,4 +1,4 @@
-package org.example;
+package org.fanControl;
 
 import java.io.*;
 import javax.swing.*; //arayüzü yaptığımız kütüphane 
@@ -25,7 +25,7 @@ public class App {
         try {
             UIManager.setLookAndFeel(new FlatDarkLaf());
         } catch (Exception e) {
-            System.err.println("Cannot load the theme: " + e.getMessage()); // eğer eklenemezse hata veriyor 
+            System.err.println("Tema yuklenemedi " + e.getMessage()); // eğer eklenemezse hata veriyor 
         }
 
         // mqtt sunucusuna bağlantı ayarı
@@ -60,10 +60,8 @@ public class App {
 
         gbc.gridy = 2;
         gbc.weighty = 0.2;
-        frame.add(bottomPanel, gbc);
-
-        frame.setVisible(true); // pencereyi görünür yapıyor
-        sendMqttPackage(client, "esp/statusCheck", 0);
+        frame.add(bottomPanel, gbc); // pencereyi görünür yapıyor
+        frame.setVisible(true);
         // mqtt "esp/therm" kanalından sıcaklık okuması alınıp grafiğe ve anlık sıcaklık göstergesine yükleyen fonksiyon
         readTherm thread = new readTherm(); // thread'in açılma sebebi aynı anda mqtt üzerinden gelen sıcaklık verisinin okunması gerek hem de pencereyi açıyor iki işi aynı anda yapması için thread kullanılıyor 
         thread.start();
