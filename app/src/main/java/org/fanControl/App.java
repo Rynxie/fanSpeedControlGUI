@@ -5,6 +5,7 @@ import java.io.*;
 import javax.print.DocFlavor.STRING;
 import javax.swing.*; //arayüzü yaptığımız kütüphane 
 import java.awt.*;
+import java.awt.event.ActionListener;
 import com.formdev.flatlaf.*;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import org.eclipse.paho.client.mqttv3.*;
@@ -17,6 +18,7 @@ public class App {
     public static JButton kapatButton;
     public static JSlider slider;
     public static JCheckBox autoModCheckBox;
+    public static ActionListener checkBoxListener;
     public static MqttClient client;
  
 
@@ -72,14 +74,41 @@ public class App {
         gbc.gridy = 2;
         gbc.weighty = 0.2;
         frame.add(bottomPanel, gbc); // pencereyi görünür yapıyor
-        changeInteractionStatus(false);
+        changeInteractionStatus(false,false,false,true);
         frame.setVisible(true);
         // mqtt "esp/therm" kanalından sıcaklık okuması alınıp grafiğe ve anlık sıcaklık göstergesine yükleyen fonksiyon
         readTherm thread = new readTherm(); // thread'in açılma sebebi aynı anda mqtt üzerinden gelen sıcaklık verisinin okunması gerek hem de pencereyi açıyor iki işi aynı anda yapması için thread kullanılıyor 
         thread.start();
     }
-    public static void changeInteractionStatus(boolean status){
+    public static void changeInteractionStatus(boolean enableAcButton, boolean enableKapatButton, boolean enableAutoBox, boolean disableAll){
 
+        acButton.setEnabled(!disableAll);
+        kapatButton.setEnabled(!disableAll);
+        slider.setEnabled(!disableAll);
+        autoModCheckBox.setEnabled(!disableAll);
+        
+        acButton.setBackground(Color.decode("#c9b5b5"));
+        kapatButton.setBackground(Color.decode("#c9b5b5"));
+
+       if(enableAcButton){
+            acButton.setBackground(Color.decode("#c9b5b5"));
+            kapatButton.setBackground(Color.decode("#fc4f25"));
+            kapatButton.setEnabled(true);
+            acButton.setEnabled(false);
+       }
+       if (enableKapatButton) {
+            
+            acButton.setBackground(Color.decode("#42aa86"));
+            kapatButton.setBackground(Color.decode("#c9b5b5"));
+            kapatButton.setEnabled(false);
+            acButton.setEnabled(true);
+
+       }
+       if(enableAutoBox){
+        autoModCheckBox.setEnabled(true);
+       }
+
+/* 
         acButton.setEnabled(status);
         kapatButton.setEnabled(status);
         slider.setEnabled(status);
@@ -92,7 +121,7 @@ public class App {
         }else{
             acButton.setBackground(Color.decode("#c9b5b5"));
             kapatButton.setBackground(Color.decode("#c9b5b5"));
-        }
+        } */
     }
     public static void sendMqttPackage(MqttClient client, String topic, int data){
         
@@ -104,7 +133,7 @@ public class App {
         } catch (MqttException error) { 
             System.out.println("Sinyal gönderilemedi");
         } finally {
-            System.out.println("Sinyal gönderildi --> " + payload);
+            System.out.println("Sinyal gönderildi topic --> "+ topic + " mesaj --> " + payload);
         }
         return;
     }
@@ -120,7 +149,7 @@ public class App {
         } catch (MqttException error) { 
             System.out.println("Sinyal gönderilemedi");
         } finally {
-            System.out.println("Sinyal gönderildi --> " + payload);
+            System.out.println("Sinyal gönderildi topic --> "+ topic + " mesaj --> " + payload);
         }
         return;
     }
@@ -151,28 +180,22 @@ public class App {
         });
         
         autoModCheckBox.setHorizontalAlignment(SwingConstants.RIGHT);
-        autoModCheckBox.addActionListener(e -> {
+        checkBoxListener = e -> {
             System.out.println("Auto mod değişti"); 
             boolean statusBool = autoModCheckBox.isSelected();
-            int status =  statusBool ? 1 : 0;
-
             
-            acButton.setEnabled(!statusBool);
-            kapatButton.setEnabled(!statusBool);
-            slider.setEnabled(!statusBool);
-
-           // sendMqttPackage(client, "esp/statusCheck", 0);
-            
-            if(!statusBool){
-                acButton.setBackground(Color.decode("#42aa86"));
-                kapatButton.setBackground(Color.decode("#fc4f25"));
+            if (statusBool) {
+                changeInteractionStatus(false, false, true, true);
             }else{
-                acButton.setBackground(Color.decode("#c9b5b5"));
-                kapatButton.setBackground(Color.decode("#c9b5b5"));
+                changeInteractionStatus(false, false, true, false);
             }
 
-            sendMqttPackage(client,"esp/auto",status);
-        });
+            
+            
+
+            
+        };
+        autoModCheckBox.addActionListener(checkBoxListener);
     
         JButton timeFrameSummoner = new JButton("Ayarlar");
 
@@ -255,12 +278,10 @@ public class App {
 
             switch (signal) {
                 case 1:
-                    acButton.setBackground(Color.decode("#c9b5b5"));
-                    kapatButton.setBackground(Color.decode("#fc4f25"));
+                    changeInteractionStatus(false,true,false,false);
                     break;
                 case 0:
-                    acButton.setBackground(Color.decode("#42aa86"));
-                    kapatButton.setBackground(Color.decode("#c9b5b5"));
+                    changeInteractionStatus(true,false,false,false);
                 default:
                     break;
             }
