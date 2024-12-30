@@ -1,6 +1,8 @@
 package org.fanControl;
 
 import java.io.*;
+
+import javax.print.DocFlavor.STRING;
 import javax.swing.*; //arayüzü yaptığımız kütüphane 
 import java.awt.*;
 import com.formdev.flatlaf.*;
@@ -9,14 +11,16 @@ import org.eclipse.paho.client.mqttv3.*;
 
 public class App {
 
-    public static JLabel therm = new JLabel("Baglanti YOK!");// espyi takmadan önceki yazı 
+    public static JLabel therm = new JLabel("ESP offline...");// espyi takmadan önceki yazı 
     public static chart thermChart = new chart(); // grafik 
     public static JButton acButton;
     public static JButton kapatButton;
     public static JSlider slider;
     public static JCheckBox autoModCheckBox;
+    public static MqttClient client;
+ 
 
-    public static void main(String[] args) throws MqttException {
+    public static void main(String[] args){
 
         // tema ayarlama
         FlatDarkLaf.setup();
@@ -29,9 +33,16 @@ public class App {
         }
 
         // mqtt sunucusuna bağlantı ayarı
-        MqttClient client = new MqttClient("tcp://tuna.sh:1884", "JavaApp");
-        client.connect();
-        System.out.println("Connected to server");
+        try {
+            client = new MqttClient("tcp://tuna.sh:1884", "JavaApp");
+            client.connect();
+            
+        } catch (MqttException e) {
+            JOptionPane.showMessageDialog(null, "Mqtt bağlantısı kurulamadı ! İnternet bağlantınızın olduğuna ya da TCP 1884 portunun yasaklı olmadığına emin olunuz", null, 0);
+            System.exit(0);
+        }finally{
+            System.out.println("MQTT bağlantısı sağlandı");
+        }
 
         // pencere ayarları
         JFrame frame = new JFrame();
@@ -61,14 +72,47 @@ public class App {
         gbc.gridy = 2;
         gbc.weighty = 0.2;
         frame.add(bottomPanel, gbc); // pencereyi görünür yapıyor
+        changeInteractionStatus(false);
         frame.setVisible(true);
         // mqtt "esp/therm" kanalından sıcaklık okuması alınıp grafiğe ve anlık sıcaklık göstergesine yükleyen fonksiyon
         readTherm thread = new readTherm(); // thread'in açılma sebebi aynı anda mqtt üzerinden gelen sıcaklık verisinin okunması gerek hem de pencereyi açıyor iki işi aynı anda yapması için thread kullanılıyor 
         thread.start();
     }
+    public static void changeInteractionStatus(boolean status){
+
+        acButton.setEnabled(status);
+        kapatButton.setEnabled(status);
+        slider.setEnabled(status);
+        autoModCheckBox.setEnabled(status);
+        
+         
+        if(status){
+            acButton.setBackground(Color.decode("#42aa86"));
+            kapatButton.setBackground(Color.decode("#fc4f25"));
+        }else{
+            acButton.setBackground(Color.decode("#c9b5b5"));
+            kapatButton.setBackground(Color.decode("#c9b5b5"));
+        }
+    }
     public static void sendMqttPackage(MqttClient client, String topic, int data){
         
         String payload = "" + data;
+        MqttMessage message = new MqttMessage(payload.getBytes());
+        message.setQos(1);
+        try { 
+            client.publish(topic, message);
+        } catch (MqttException error) { 
+            System.out.println("Sinyal gönderilemedi");
+        } finally {
+            System.out.println("Sinyal gönderildi --> " + payload);
+        }
+        return;
+    }
+
+
+    public static void sendMqttPackage(MqttClient client, String topic, String data){
+        
+        String payload = data;
         MqttMessage message = new MqttMessage(payload.getBytes());
         message.setQos(1);
         try { 
@@ -116,12 +160,25 @@ public class App {
             acButton.setEnabled(!statusBool);
             kapatButton.setEnabled(!statusBool);
             slider.setEnabled(!statusBool);
+
+           // sendMqttPackage(client, "esp/statusCheck", 0);
             
+            if(!statusBool){
+                acButton.setBackground(Color.decode("#42aa86"));
+                kapatButton.setBackground(Color.decode("#fc4f25"));
+            }else{
+                acButton.setBackground(Color.decode("#c9b5b5"));
+                kapatButton.setBackground(Color.decode("#c9b5b5"));
+            }
 
             sendMqttPackage(client,"esp/auto",status);
         });
     
-        JButton timeFrameSummoner = new JButton("Zaman ayarları");
+        JButton timeFrameSummoner = new JButton("Ayarlar");
+
+        timeFrameSummoner.addActionListener(e -> {
+            settingsFrame settings = new settingsFrame();
+        });
     
         gbcTop.weighty = 0.4;
         gbcTop.weightx = 0.1;
@@ -195,6 +252,18 @@ public class App {
         button.addActionListener(e -> { // butona tıklandığında yapılacak şeyler
             
             sendMqttPackage(client,"esp/signal",signal);
+
+            switch (signal) {
+                case 1:
+                    acButton.setBackground(Color.decode("#c9b5b5"));
+                    kapatButton.setBackground(Color.decode("#fc4f25"));
+                    break;
+                case 0:
+                    acButton.setBackground(Color.decode("#42aa86"));
+                    kapatButton.setBackground(Color.decode("#c9b5b5"));
+                default:
+                    break;
+            }
         });
 
         return button; // oluşturulan buton döndürülür

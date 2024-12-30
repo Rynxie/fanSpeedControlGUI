@@ -1,5 +1,6 @@
 package org.fanControl;
 
+import org.checkerframework.checker.units.qual.min;
 import org.eclipse.paho.client.mqttv3.*;
 import java.nio.charset.Charset;
 
@@ -8,8 +9,9 @@ import java.awt.Color;
 
 public class readTherm extends Thread  {
 
-    
-    
+    public static int minTemp = 0;
+    boolean isFirstMessage = true;
+    boolean isFirstAutoMessage = true;
     @Override
     public void run(){
         
@@ -46,9 +48,13 @@ public class readTherm extends Thread  {
                             }else{
                                 colorCode = "#ff7676";
                             }
-
+                            
+                            if(isFirstMessage){
+                                org.fanControl.App.changeInteractionStatus(true);
+                                org.fanControl.App.sendMqttPackage(client, "esp/statusCheck", 0);
+                            }
                             org.fanControl.App.therm.setForeground(Color.decode(colorCode));
-                            org.fanControl.App.sendMqttPackage(client, "esp/statusCheck", 0);
+                            
                             
                         }
                         if(topic.equals("esp/statusInfo")){
@@ -60,15 +66,40 @@ public class readTherm extends Thread  {
                                 org.fanControl.App.kapatButton.setEnabled(false);
                                 org.fanControl.App.slider.setEnabled(false);
 
-                                org.fanControl.App.autoModCheckBox.setSelected(true);
+                                org.fanControl.App.autoModCheckBox.doClick();
+                                
+
+                               
+                                
+
+
                             }else{
                                 org.fanControl.App.acButton.setEnabled(true);
                                 org.fanControl.App.kapatButton.setEnabled(true);
                                 org.fanControl.App.slider.setEnabled(true);
+
                                 
+                                
+                            
+                                if(isFirstAutoMessage){
+                                    if (Integer.parseInt(data[0]) == 1) {
+                                        org.fanControl.App.acButton.doClick();
+                                    }else{
+                                        org.fanControl.App.kapatButton.doClick();
+                                    } 
+                                    
+                                }
+
+                                org.fanControl.App.slider.setValue(Integer.parseInt(data[1]));
+                                minTemp = Integer.parseInt(data[3]);
+                                System.out.println(minTemp);
                                 org.fanControl.App.autoModCheckBox.setSelected(false);
                             }
+
+                            isFirstAutoMessage = false;
                         }
+
+                        isFirstMessage = false;
 
                     }
     
