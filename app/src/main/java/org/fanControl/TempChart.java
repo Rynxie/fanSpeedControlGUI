@@ -12,9 +12,9 @@ import com.formdev.flatlaf.FlatDarkLaf;
 
 
 import javax.swing.*;
-import java.awt.*;
 
-public class chart {
+
+public class TempChart {
     
     private TimeSeries series = new TimeSeries("Sıcaklık durumu"); 
     TimeSeriesCollection dataset = new TimeSeriesCollection(series); // verileri timeseries diye bir şeyin içine ekliyoruz kütüphane istiyor
@@ -32,7 +32,7 @@ public class chart {
     
     public ChartPanel chartPanel = new ChartPanel(chart);
     
-    public chart(){
+    public TempChart(){
         try {
             UIManager.setLookAndFeel(new FlatDarkLaf());
         } catch (Exception e) {

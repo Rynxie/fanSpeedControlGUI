@@ -1,7 +1,6 @@
 package org.fanControl;
 
 
-import java.util.regex.PatternSyntaxException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -35,7 +34,11 @@ public class settingsFrame extends JFrame{
 
             this.setLayout(new GridBagLayout());
             this.setSize(300, 350);
-            minTempField.setText("" + org.fanControl.readTherm.minTemp);
+            
+            
+
+
+            minTempField.setText("" + org.fanControl.MQTTClient.minTemp);
             submitButton.setHorizontalAlignment(SwingConstants.CENTER);
             submitButton.addActionListener(e->{
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -50,18 +53,29 @@ public class settingsFrame extends JFrame{
                     return;
                 }
                     
-                org.fanControl.App.sendMqttPackage(org.fanControl.App.client, "esp/timing", minTempField.getText() + ";" + autoTimeStartClock.getText() + ";" + autoTimeStopClock.getText() + ";");
+                MQTTClient.sendMqttPackage(org.fanControl.App.mqttThread.client, "esp/timing", minTempField.getText() + ";" + autoTimeStartClock.getText() + ";" + autoTimeStopClock.getText() + ";");
                 JOptionPane.showMessageDialog(null, "Fan, " + autoTimeStartClock.getText() + "-" + autoTimeStopClock.getText() + " Saatleri arasında minimum " + minTempField.getText() + "C° sıcaklında çalışacak şekilde ayarlandı");
                 
                  
 
                 
             });
+
+            submitWifiButton.addActionListener(e->{
+                if(ssidField.getText().length() <= 10 && passworField.getText().length() <= 10){
+                    MQTTClient.sendMqttPackage(org.fanControl.App.mqttThread.client, "esp/wifi", ssidField.getText() + ";" + passworField.getText());
+                    JOptionPane.showMessageDialog(null,"ESP yeniden başladığında verilen bilgilere sahip WiFi ağına bağlanmaya çalışacak!");
+                }else{
+                    JOptionPane.showMessageDialog(null, "SSID ve Şifre 10 karakterden az olmalıdır", null, 0);
+                }
+            });
         
             timerTitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
             wifiTitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
             timerTitleLabel.setFont(new Font("Arial", Font.BOLD, 16));
             wifiTitleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+
+            
             
             
             GridBagConstraints gbc = new GridBagConstraints();
