@@ -1,8 +1,10 @@
 package org.fanControl;
 
-import java.io.*;
-import java.util.regex.PatternSyntaxException;
 
+import java.util.regex.PatternSyntaxException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import javax.swing.*; //arayüzü yaptığımız kütüphane 
 import java.awt.*;
 
@@ -36,16 +38,24 @@ public class settingsFrame extends JFrame{
             minTempField.setText("" + org.fanControl.readTherm.minTemp);
             submitButton.setHorizontalAlignment(SwingConstants.CENTER);
             submitButton.addActionListener(e->{
-                
-               /*  try {
-                    autoTimeStartClock.getText().split(":");
-                } catch (PatternSyntaxException error) {
-                    //JOptionPane.showMessageDialog(null, "Lütfen saatleri XX:XX şeklinde girniz. Örneğin 19:0" + error);
-                }
-                 */
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+                try {
+                    
+                   
+                    LocalTime.parse(autoTimeStartClock.getText(), formatter);
+                    LocalTime.parse(autoTimeStopClock.getText(), formatter);
 
+                } catch (DateTimeParseException error) {
+                    JOptionPane.showMessageDialog(null, "Lütfen saatleri XX:XX şeklinde girniz. Örneğin 19:00 " + error,null,0);
+                    return;
+                }
+                    
                 org.fanControl.App.sendMqttPackage(org.fanControl.App.client, "esp/timing", minTempField.getText() + ";" + autoTimeStartClock.getText() + ";" + autoTimeStopClock.getText() + ";");
                 JOptionPane.showMessageDialog(null, "Fan, " + autoTimeStartClock.getText() + "-" + autoTimeStopClock.getText() + " Saatleri arasında minimum " + minTempField.getText() + "C° sıcaklında çalışacak şekilde ayarlandı");
+                
+                 
+
+                
             });
         
             timerTitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
