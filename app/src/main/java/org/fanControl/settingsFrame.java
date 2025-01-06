@@ -4,7 +4,7 @@ package org.fanControl;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import javax.swing.*; //arayüzü yaptığımız kütüphane 
+import javax.swing.*;
 import java.awt.*;
 
 public class settingsFrame extends JFrame{

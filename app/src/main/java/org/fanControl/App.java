@@ -3,6 +3,8 @@ package org.fanControl;
 
 
 import javax.swing.*; //arayüzü yaptığımız kütüphane 
+import javax.swing.event.ChangeListener;
+
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -22,6 +24,7 @@ public class App {
     public static JSlider slider;
     public static JCheckBox autoModCheckBox;
     public static ActionListener checkBoxListener;
+    public static ChangeListener sliderListener;
     public static MQTTClient mqttThread;
  
 
@@ -120,12 +123,13 @@ public class App {
     
         speedLabel.setFont(new Font("Arial", Font.BOLD, 16)); 
         autoModLabel.setFont(new Font("Arial", Font.BOLD, 16)); 
-    
-        slider.addChangeListener(e -> { 
+        
+        sliderListener = e -> { 
             System.out.println("Fan hızı ayarlandı"); 
             int pwmDuty = slider.getValue();
             MQTTClient.sendMqttPackage(mqttThread.client,"esp/speed",pwmDuty);
-        });
+        };
+        slider.addChangeListener(sliderListener);
         
         autoModCheckBox.setHorizontalAlignment(SwingConstants.RIGHT);
         checkBoxListener = e -> {

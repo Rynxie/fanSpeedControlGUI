@@ -110,8 +110,10 @@ public class MQTTClient extends Thread  {
                                 } 
                                     
                                 
-
+                                org.fanControl.App.slider.removeChangeListener(org.fanControl.App.sliderListener);
                                 org.fanControl.App.slider.setValue(Integer.parseInt(data[1]));
+                                org.fanControl.App.slider.addChangeListener(org.fanControl.App.sliderListener);
+
                                 minTemp = Integer.parseInt(data[3]);
                                 
                                 org.fanControl.App.autoModCheckBox.removeActionListener(org.fanControl.App.checkBoxListener);
@@ -134,7 +136,7 @@ public class MQTTClient extends Thread  {
     
                 
                 client.subscribe("esp/therm"); // mqtt'nin esp/therm kanalına abone oluyor- bu kanalan bir veri gelirse alıyor
-                client.subscribe("esp/statusInfo");
+                client.subscribe("esp/statusInfo"); //esp'nin anlık durumlarını (Hız, sinyal, auto mod, min sıcaklık) gibi yayınladığı kanal
             }
 
 
@@ -142,8 +144,6 @@ public class MQTTClient extends Thread  {
             JOptionPane.showMessageDialog(null, "Mqtt bağlantısı kurulamadı ! İnternet bağlantınızın olduğuna ya da TCP 1884 portunun yasaklı olmadığına emin olunuz", null, 0);
             System.exit(0);
             
-        }finally{
-            System.out.println("MQTT bağlantısı sağlandı");
         }
     }
 }
